@@ -1,5 +1,8 @@
 # Unicode Character Viewer
 
+![Screenshot_1](https://github.com/xKomorebi/unicodeView/assets/21682081/519fcf1c-86a2-4803-a482-f88cc4a59d7d)
+
+
 PLEASE NOTE THAT THIS APPLICATION IS NO WHERE NEAR FINISHED.
 
 
