@@ -19,6 +19,15 @@ class UnicodeViewerApp:
         # Center the window on the screen
         self.center_window()
 
+        # Make the window resizable
+        self.root.resizable(True, True)
+
+        # Initialize favorite characters
+        self.favorite_characters = []
+
+        # Load settings
+        self.load_settings()
+
     def create_title_bar(self):
         self.title_bar = ttk.Frame(self.root)
         self.title_bar.pack(fill='x')
@@ -50,20 +59,18 @@ class UnicodeViewerApp:
     def drag(self, event):
         deltax = event.x - self.start_x
         deltay = event.y - self.start_y
-
         x = self.root.winfo_x() + deltax
         y = self.root.winfo_y() + deltay
         self.root.geometry(f"+{x}+{y}")
 
     def create_ui(self):
-        self.text_area = scrolledtext.ScrolledText(self.root, width=80, height=30)
+        self.text_area = scrolledtext.ScrolledText(self.root, width=80, height=30, font=('Arial', 12))
         self.text_area.pack()
 
         self.load_button = ttk.Button(self.root, text="Load Unicode Characters", command=self.load_unicode_characters)
         self.load_button.pack()
+
         uvLogger.debug("UI created successfully")
-
-
 
     def load_unicode_characters(self):
         self.text_area.delete("1.0", tk.END)
@@ -80,6 +87,50 @@ class UnicodeViewerApp:
 
         # Log an info message
         uvLogger.info("Unicode characters loaded successfully")
+
+    def save_settings(self):
+        settings_data = {
+            "bg_color": settings.settings_data.get("bg_color", "#FFFFFF"),
+            "text_color": settings.settings_data.get("text_color", "#000000"),
+            "enable_logging": settings.settings_data.get("enable_logging", 0),
+            "favorite_characters": self.favorite_characters,
+            "window_settings": {
+                "position": self.root.geometry(),
+                "size": (self.root.winfo_width(), self.root.winfo_height())
+            }
+        }
+
+        with open("unicodeViewer.settings", "w") as f:
+            json.dump(settings_data, f)
+
+    def load_settings(self):
+        try:
+            with open("unicodeViewer.settings", "r") as f:
+                settings_data = json.load(f)
+
+            self.favorite_characters = settings_data.get("favorite_characters", [])
+
+            bg_color = settings_data.get("bg_color")
+            text_color = settings_data.get("text_color")
+            enable_logging = settings_data.get("enable_logging", 0)
+            position = settings_data.get("window_settings", {}).get("position")
+            size = settings_data.get("window_settings", {}).get("size")
+
+            if bg_color:
+                settings.settings_data["bg_color"] = bg_color
+            if text_color:
+                settings.settings_data["text_color"] = text_color
+            if enable_logging is not None:
+                settings.settings_data["enable_logging"] = enable_logging
+            if position:
+                self.root.geometry(position)
+            if size:
+                self.root.geometry(f"{size[0]}x{size[1]}")
+
+            self.apply_settings()
+
+        except (FileNotFoundError, json.JSONDecodeError):
+            pass
 
     def open_settings(self):
         self.settings_window = tk.Toplevel(self.root)
@@ -129,7 +180,6 @@ class UnicodeViewerApp:
             json.dump(settings.settings_data, f)
 
         self.settings_window.destroy()
-
         self.apply_settings()
 
     def apply_settings(self):
